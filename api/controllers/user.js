@@ -1,32 +1,20 @@
-const express = require("express");
-const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
 const keys = require("../../config/keys");
 
-// Load input Validation
-const validateRegisterInput = require("../../validation/register");
-const validateLoginInput = require("../../validation/login");
+/* Load input Validation */
+const validateRegisterInput = require("../validation/register");
+const validateLoginInput = require("../validation/login");
 
-// Load user Model
-const User = require("../../models/User");
+/* Load user Model */
+const User = require("../models/User");
 
-// @route GET api/users/test
-// @desc Test users route
-// @access public
-router.get("/test", (req, res) =>
-  res.json({
-    msg: "Users Works!"
-  })
-);
-
-// @route POST api/users/register
+// @route POST users/register
 // @desc Regiser New User
 // @access public
-router.post("/register", (req, res) => {
+exports.userRegister = (req, res) => {
   const { errors, isValid } = validateRegisterInput(req.body);
-
   //Check Validation
   if (!isValid) {
     return res.status(400).json(errors);
@@ -56,12 +44,12 @@ router.post("/register", (req, res) => {
       });
     }
   });
-});
+};
 
-// @route POST api/users/login
+// @route POST users/login
 // @desc Login User / Return JWT Token
 // @access public
-router.post("/login", (req, res) => {
+exports.userLogin = (req, res) => {
   const { errors, isValid } = validateLoginInput(req.body);
 
   //Check Validation
@@ -103,21 +91,15 @@ router.post("/login", (req, res) => {
       }
     });
   });
-});
+};
 
-// @route GET api/users/current
+// @route GET users/current
 // @desc Return current User
 // @access private
-router.get(
-  "/current",
-  passport.authenticate("jwt", { session: false }),
-  (req, res) => {
-    res.json({
-      id: req.user.id,
-      name: req.user.name,
-      email: req.user.email
-    });
-  }
-);
-
-module.exports = router;
+exports.userCurrent = (req, res) => {
+  res.json({
+    id: req.user.id,
+    name: req.user.name,
+    email: req.user.email
+  });
+};
