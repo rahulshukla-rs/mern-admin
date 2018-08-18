@@ -5,6 +5,10 @@ const jwt = require("jsonwebtoken");
 const passport = require("passport");
 const keys = require("../../config/keys");
 
+// Load input Validation
+const validateRegisterInput = require("../../validation/register");
+const validateLoginInput = require("../../validation/login");
+
 // Load user Model
 const User = require("../../models/User");
 
@@ -21,16 +25,23 @@ router.get("/test", (req, res) =>
 // @desc Regiser New User
 // @access public
 router.post("/register", (req, res) => {
+  const { errors, isValid } = validateRegisterInput(req.body);
+
+  //Check Validation
+  if (!isValid) {
+    return res.status(400).json(errors);
+  }
+
   User.findOne({ email: req.body.email }).then(user => {
     if (user) {
-      return res
-        .status(400)
-        .json({ status: "0", msg: "Email already exists." });
+      errors.email = "Email already exists.";
+      return res.status(400).json(errors);
     } else {
       const newUser = new User({
         name: req.body.name,
         email: req.body.email,
-        password: req.body.password
+        password: req.body.password,
+        type: req.body.type
       });
 
       bcrypt.genSalt(10, (err, salt) => {
@@ -51,13 +62,21 @@ router.post("/register", (req, res) => {
 // @desc Login User / Return JWT Token
 // @access public
 router.post("/login", (req, res) => {
+  const { errors, isValid } = validateLoginInput(req.body);
+
+  //Check Validation
+  if (!isValid) {
+    return res.status(400).json(errors);
+  }
+
   const email = req.body.email;
   const password = req.body.password;
 
   // Find User by Email
   User.findOne({ email }).then(user => {
     if (!user) {
-      return res.status(404).json({ status: "0", msg: "user not found." });
+      errors.email = "user not found.";
+      return res.status(404).json(errors);
     }
     // Check Password
     bcrypt.compare(password, user.password).then(isMatch => {
@@ -66,6 +85,7 @@ router.post("/login", (req, res) => {
         //User Matched
         const payLoad = {
           id: user.id,
+          type: user.type,
           name: user.name,
           email: user.email
         }; //Create JWT PayLoad
@@ -78,9 +98,8 @@ router.post("/login", (req, res) => {
           });
         });
       } else {
-        return res
-          .status(400)
-          .json({ status: "0", msg: "Incorrect Password." });
+        errors.password = "Incorrect Password.";
+        return res.status(400).json(errors);
       }
     });
   });
