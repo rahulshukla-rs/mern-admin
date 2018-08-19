@@ -14,6 +14,28 @@ router.get(
   UserController.userCurrent
 );
 
-//router.delete("/:userId", checkAuth, UserController.user_delete);
+router.get(
+  "/list",
+  passport.authenticate("jwt", { session: false }),
+  UserController.userList
+);
+
+router.post(
+  "/add",
+  passport.authenticate("jwt", { session: false }),
+  UserController.userAdd
+);
+
+router.post(
+  "/update",
+  passport.authenticate("jwt", { session: false }),
+  UserController.userUpdate
+);
+
+router.delete(
+  "/:userId",
+  passport.authenticate("jwt", { session: false }),
+  UserController.userDelete
+);
 
 module.exports = router;
